@@ -71,14 +71,14 @@ Edit `config.mk` one last time and change the `sh_gcc_ver` to `13`:
 sh_gcc_ver=13
 ```
 
-Now, run `make` inside of the folder and a newly compiled toolchain should exist in
+Now, run `make build` inside of the folder and a newly compiled toolchain should exist in
 `/opt/toolchains/dc-gcc13/`. Add `/opt/toolchains/dc-gcc13/sh-elf/bin` and `/opt/toolchains/dc-gcc13/arm-eabi/bin` to 
 your `PATH` variable and everything should be set up!
 
 ## Installing cargo-gccrs
 
 In order to use the `cargo` command with GCCRS, a custom plugin for cargo has been developed. Using an existing Rust
-run the following command to install the plugin:
+installation, run the following command to install the plugin:
 
 ```shell
 cargo install --git https://github.com/spencerelliott/cargo-gccrs.git --branch main cargo-gccrs
