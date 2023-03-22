@@ -10,11 +10,11 @@ goal of this project is to remove the dependency and provide a Rust-only abstrac
 
 ### Toolchain
 GCC13 added support for the Rust programming language as a front-end. In order to be able to build binaries for the SuperH4
-processor, a custom toolchain is required.
+processor, a custom build of the GCC toolchain is required.
 
 #### Build prerequisities
 
-Using your package manager, make sure the following libraries are installed on your system:
+Make sure the following libraries are installed on the host system:
 
 ```
 sudo apt install gawk patch bzip2 tar make libgmp-dev libmpfr-dev libmpc-dev gettext wget libelf-dev texinfo bison flex sed git build-essential diffutils curl libjpeg-dev libpng-dev python3
@@ -22,8 +22,8 @@ sudo apt install gawk patch bzip2 tar make libgmp-dev libmpfr-dev libmpc-dev get
 
 #### Downloading the source
 
-Create the folder `/opt/toolchains/dc-gcc13` in your filesystem. Navigate to your new folder and checkout the latest version
-of the KallistiOS repository:
+Create the folder `/opt/toolchains/dc-gcc13` to hold all the source code and resulting binaries. Navigate to the new 
+folder and checkout the latest version of the KallistiOS repository:
 
 ```shell
 git clone -b gcc13 https://github.com/KallistiOS/KallistiOS.git kos
@@ -48,7 +48,7 @@ auto_fixup_sh4_newlib=0
 
 #### Preparing the required libraries and source code
 
-The dc-chain script requires the source for the libraries to be downloaded to specific folders. Multiple scripts are provided
+The dc-chain Makefile requires the source for the libraries to be downloaded to specific folders. Multiple scripts are provided
 in the repository to assist with setup. Run the following commands to prepare the workspace:
 
 ```shell
@@ -77,7 +77,7 @@ your `PATH` variable and everything should be set up!
 
 ## Installing cargo-gccrs
 
-In order to use the `cargo` command with GCCRS, a custom plugin for cargo has been developed. Using an existing Rust
+In order to use the `cargo` command with GCCRS, a custom plugin has been developed to use with cargo. Using an existing Rust
 installation, run the following command to install the plugin:
 
 ```shell
@@ -106,6 +106,15 @@ pub extern "C" fn main() -> u32 {
 }
 ```
 
+Additionally, add the following lines to `Cargo.toml` to make sure cargo will output an
+actual ELF binary:
+
+```toml
+[[bin]]
+name = "my_cool_project.elf"
+path = "src/main.rs"
+```
+
 Navigate to the libanzen folder using your terminal and run the following command:
 
 ```shell
@@ -119,14 +128,17 @@ the latest sources are being used in a project.
 Navigate to your project's directory and clean the project before building it for the first time:
 
 ```shell
-GCCRS_CUSTOM_BIN="sh-elf-gccrs" cargo gccrs clean
+GCCRS_INCOMPLETE_AND_EXPERIMENTAL_COMPILER_DO_NOT_USE=1 GCCRS_CUSTOM_BIN="sh-elf-gccrs" cargo gccrs clean
 ```
 
 After cleaning for the first time, it should be possible to build the project using:
 
 ```shell
-GCCRS_CUSTOM_BIN="sh-elf-gccrs" cargo gccrs build
+GCCRS_INCOMPLETE_AND_EXPERIMENTAL_COMPILER_DO_NOT_USE=1 GCCRS_CUSTOM_BIN="sh-elf-gccrs" cargo gccrs build
 ```
+
+Both `GCCRS_INCOMPLETE_AND_EXPERIMENTAL_COMPILER_DO_NOT_USE` and `GCCRS_CUSTOM_BIN` can be added to your environment
+variables if you do not want to pass them to `cargo` each time.
 
 ## Accessing modules
 
