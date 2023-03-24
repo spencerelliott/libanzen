@@ -36,17 +36,22 @@ extern "C" {
     fn cdfs_gettoc() -> *mut TableOfContents;
 }
 
-/// The maximum size of data that can be read from disc at a time
+/// The maximum size of data that can be read from disc at a time.
 pub const DATA_CHUNK_MAX_SIZE: usize = 1024;
 
-/// Opens a file from disc as read-only
+/// Opens a file from disc as read-only.
 pub const O_RDONLY: i32 = 0;
 
-/// Opens as a directory
+/// Opens as a directory.
 pub const O_DIR: i32 = 4;
 
+/// Used to seek to an exact offset.
 pub const SEEK_SET: i32 = 0;
+
+/// Used to seek from the current offset of the file.
 pub const SEEK_CUR: i32 = 1;
+
+/// Used to seek from the end of the file.
 pub const SEEK_END: i32 = 2;
 
 #[repr(C)]
@@ -99,6 +104,13 @@ impl DataChunk {
 
     /// Retrieves a single byte from this data chunk. This will always return
     /// zero if the `index` exceeds `size`.
+    ///
+    /// # Arguments
+    /// * `index` - The index of the byte in the buffer
+    ///
+    /// # Returns
+    /// The value of the byte at the location in the buffer. This will return 0 if the `index`
+    /// is greater than the actual size of the read buffer.
     pub fn get_byte(&self, index: usize) -> u8 {
         if index > self.size {
             return 0;
@@ -109,6 +121,13 @@ impl DataChunk {
 
     /// Retrieves a single byte from this data chunk as a character. This will always return
     /// zero if the `index` exceeds `size`.
+    ///
+    /// # Arguments
+    /// * `index` - The index of the character in the buffer
+    ///
+    /// # Returns
+    /// The value of the character at the location in the buffer. This will return 0 if the `index`
+    /// is greater than the actual size of the read buffer.
     pub fn get_char(&self, index: usize) -> char {
         self.get_byte(index) as char
     }
@@ -125,10 +144,15 @@ pub struct CdfsFile {
 }
 
 impl CdfsFile {
-    /// Reads the desired amount of bytes from this file. The max amount of data that can be read in
-    /// a single read is `cdfs::DATA_CHUNK_MAX_SIZE`.
+    /// Reads the desired amount of bytes from this file.
+    ///
+    /// # Arguments
+    /// * `nbytes` - The number of bytes to read. Can be a maximum of [DATA_CHUNK_MAX_SIZE].
+    ///
+    /// # Returns
+    /// [DataReadResult::Ok] containing the [DataChunk] when successful, [DataReadResult::Error] otherwise.
     pub fn read(&self, nbytes: usize) -> DataReadResult {
-        let mut buf: [u8; 1024] = [0; DATA_CHUNK_MAX_SIZE];
+        let mut buf: [u8; DATA_CHUNK_MAX_SIZE] = [0; DATA_CHUNK_MAX_SIZE];
         let mut read_bytes = -1;
 
         // Make sure the user is not requesting more than is possible
@@ -151,6 +175,38 @@ impl CdfsFile {
         })
     }
 
+    /// Retrieves the size of this file.
+    ///
+    /// # Returns
+    /// The size of the file in bytes or -1 if a size could not be determined.
+    pub fn file_size(&self) -> i32 {
+        let mut size: i32 = -1;
+
+        unsafe {
+            size = file_size(self.fd);
+        }
+
+        size
+    }
+
+    /// Seeks within the file based on the offset.
+    ///
+    /// # Arguments
+    /// * `offset` - The offset to apply based on `from`
+    /// * `from` - Can be either [SEEK_SET], [SEEK_CUR], or [SEEK_END]
+    ///
+    /// # Returns
+    /// The new offset the file is pointing to, in bytes.
+    pub fn seek(&self, offset: i64, from: i32) -> i32 {
+        let mut new_offset: i32 = -1;
+
+        unsafe {
+            new_offset = lseek(self.fd, offset, from);
+        }
+
+        new_offset
+    }
+
     /// Closes the file while also consuming the variable so it can no longer be used.
     pub fn close(self) {
         unsafe {
@@ -162,8 +218,14 @@ impl CdfsFile {
 pub struct Cdfs { }
 
 impl Cdfs {
-    /// Attempts to open a file from the disc. If the file is not available, `CdfsOpenResult::Error`
-    /// will be returned.
+    /// Attempts to open a file from the disc.
+    ///
+    /// # Arguments
+    /// * `path` - The path to the file on the disc filesystem.
+    /// * `oflags` - Can be either [O_RDONLY] or [O_DIR].
+    ///
+    /// # Returns
+    /// [CdfsOpenResult::Ok] containing the [CdfsFile] on successful open, [CdfsOpenResult::Error] otherwise.
     pub fn open(path: &str, oflags: i32) -> CdfsOpenResult {
         let mut fd = -1;
 
