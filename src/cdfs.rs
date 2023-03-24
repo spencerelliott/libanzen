@@ -1,3 +1,18 @@
+//! # CDFS
+//!
+//! This module provides an interface to open and read files from the GD-ROM drive.
+//!
+//! ## Usage
+//!
+//! ```rust
+//! if let CdfsOpenResult::Ok(file) = Cdfs::open("some_file.txt", O_RDONLY) {
+//!     if let DataReadResult::Ok(data) = file.read(DATA_CHUNK_MAX_SIZE) {
+//!         // Do something with your data
+//!     }
+//!
+//!     file.close();
+//! }
+//! ```
 
 extern "C" {
     fn open(path: &str, oflag: i32) -> i32;
@@ -21,9 +36,13 @@ extern "C" {
     fn cdfs_gettoc() -> *mut TableOfContents;
 }
 
+/// The maximum size of data that can be read from disc at a time
 pub const DATA_CHUNK_MAX_SIZE: usize = 1024;
 
+/// Opens a file from disc as read-only
 pub const O_RDONLY: i32 = 0;
+
+/// Opens as a directory
 pub const O_DIR: i32 = 4;
 
 pub const SEEK_SET: i32 = 0;
@@ -52,11 +71,15 @@ struct DirectoryEntry {
     d_name: [i8; 256]
 }
 
+/// Encapsulates the response given when reading data from disc.
 pub enum DataReadResult {
+    /// Returned when data has successfully been read from the discs.
     Ok(DataChunk),
+    /// Returned if data could not be read.
     Error
 }
 
+/// Represents a chunk of data read from a disc.
 #[repr(C)]
 pub struct DataChunk {
     data: [u8; DATA_CHUNK_MAX_SIZE],
@@ -96,6 +119,7 @@ pub enum CdfsOpenResult {
     Error
 }
 
+/// Represents a currently open file from the disc.
 pub struct CdfsFile {
     fd: i32
 }
@@ -138,6 +162,8 @@ impl CdfsFile {
 pub struct Cdfs { }
 
 impl Cdfs {
+    /// Attempts to open a file from the disc. If the file is not available, `CdfsOpenResult::Error`
+    /// will be returned.
     pub fn open(path: &str, oflags: i32) -> CdfsOpenResult {
         let mut fd = -1;
 
