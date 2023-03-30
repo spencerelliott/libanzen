@@ -76,13 +76,15 @@ struct DirectoryEntry {
     d_name: [i8; 256]
 }
 
-/// Encapsulates the response given when reading data from disc.
-pub enum DataReadResult {
-    /// Returned when data has successfully been read from the discs.
-    Ok(DataChunk),
-    /// Returned if data could not be read.
+pub enum CdfsResult<T> {
+    Ok(T),
     Error
 }
+
+type DirectoryResult = CdfsResult<Directory>;
+
+/// Encapsulates the response given when reading data from disc.
+type DataReadResult = CdfsResult<DataChunk>;
 
 /// Represents a chunk of data read from a disc.
 #[repr(C)]
@@ -133,10 +135,7 @@ impl DataChunk {
     }
 }
 
-pub enum CdfsOpenResult {
-    Ok(CdfsFile),
-    Error
-}
+type CdfsOpenResult = CdfsResult<CdfsFile>;
 
 /// Represents a currently open file from the disc.
 pub struct CdfsFile {
@@ -240,5 +239,20 @@ impl Cdfs {
         CdfsOpenResult::Ok(CdfsFile {
             fd
         })
+    }
+
+    pub fn open_dir(path: &str) -> *const Directory {
+        let mut dir: Directory = Directory {
+            dd_size: 0,
+            dd_fd: 0,
+            dd_loc: 0,
+            dd_buf: 0 as *mut i8
+        };
+
+        unsafe {
+            //dir = opendir(path);
+        }
+
+        &dir
     }
 }
