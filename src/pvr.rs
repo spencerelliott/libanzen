@@ -21,6 +21,8 @@
 //! PowerVR::destroy_context(pvr_ctx);
 //! ```
 
+use crate::util;
+
 extern "C" {
     fn dc_setup_ta();
 }

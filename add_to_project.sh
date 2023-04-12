@@ -2,7 +2,7 @@
 # as well as any libraries and the Cargo configuration needed to compile
 # the final ELF binary
 
-SOURCES_TO_COPY="src/serial.rs src/time.rs"
+SOURCES_TO_COPY="src/serial.rs src/time.rs src/util.rs src/pvr.rs"
 
 cp $SOURCES_TO_COPY $1/src/
 cp -r .cargo $1

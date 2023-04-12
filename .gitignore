@@ -1,6 +1,8 @@
 .idea/
 /target
 /Cargo.lock
+/doc
 *.rox
 *.dump
 *.out
+.DS_Store
