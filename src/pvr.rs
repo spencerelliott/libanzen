@@ -6,16 +6,10 @@
 //! ## Usage
 //!
 //! ```rust
-//! let ctx_result: PowerVRContextResult = PowerVR::create_context();
 //! let mut pvr_ctx;
 //!
-//! match ctx_result {
-//!     PowerVRContextResult::Ok(ctx) => {
-//!         pvr_ctx = ctx;
-//!     },
-//!     _ => {
-//!         // Report some error
-//!     }
+//! if let PowerVRContextResult::Ok(ctx) = PowerVR::create_context() {
+//!     pvr_ctx = ctx;
 //! }
 //!
 //! PowerVR::destroy_context(pvr_ctx);
@@ -25,6 +19,23 @@ use crate::util;
 
 extern "C" {
     fn dc_setup_ta();
+}
+
+trait DataTransferProtocol {
+    fn queue(&self);
+    fn send(&self);
+}
+
+struct SQDataTransferProtocol { }
+
+impl DataTransferProtocol for SQDataTransferProtocol {
+    fn queue(&self) {
+
+    }
+
+    fn send(&self) {
+
+    }
 }
 
 /// Determines whether the PowerVR device needs to be initialized on context creation.
@@ -46,7 +57,10 @@ struct PowerVR { }
 
 /// Responsible for communicating with the PowerVR chip while also persisting the current context of
 /// the device.
-struct PowerVRContext { }
+struct PowerVRContext {
+    valid: bool,
+    transfer_protocol: dyn DataTransferProtocol
+}
 
 type PowerVRContextResult = PowerVRResult<PowerVRContext>;
 
@@ -70,7 +84,8 @@ impl PowerVR {
         }
 
         PowerVRContextResult::Ok(PowerVRContext {
-
+            valid: true,
+            transfer_protocol: SQDataTransferProtocol {}
         })
     }
 
@@ -79,9 +94,30 @@ impl PowerVR {
     ///
     /// # Arguments
     /// * `ctx` - The current [PowerVRContext]
-    pub fn destroy_context(ctx: PowerVRContext) {
-        unsafe { POWERVR_CONTEXT_TAKEN = false; }
+    pub fn destroy_context(ctx: &mut PowerVRContext) {
+        unsafe {
+            POWERVR_CONTEXT_TAKEN = false;
+        }
+
+        ctx.valid = false;
     }
+}
+
+macro_rules! return_if_context_invalid {
+    ( $ctx:expr ) => {
+        {
+            if !$ctx.valid {
+                return;
+            }
+        }
+    };
+    ( $ctx:expr, $ret:expr ) => {
+        {
+            if !$ctx.valid {
+                return $ret;
+            }
+        }
+    };
 }
 
 impl PowerVRContext {
