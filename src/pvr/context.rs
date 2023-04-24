@@ -1,9 +1,59 @@
+//! let mut pvr_ctx;
+//
+// if let PowerVRContextResult::Ok(ctx) = PowerVR::create_context() {
+//     pvr_ctx = ctx;
+// }
+//
+// pvr_ctx.wait_ready();
+// pvr_ctx.start_frame();
+//
+// if let PowerVRPassResult::Valid(pass1) = pvr_ctx.create_pass() {
+//   if let PowerVRDisplayListResult::Valid(op_list) = pass1.list(PVR_LIST_OP) { // Can only be called for PVR_LIST_OP once per pass
+//     // Draw all vertices in OP list
+//   }
+//   // op_list will finalize the list when going out of scope
+//
+//   if let PowerVRDisplayListResult::Valid(tr_list) = pass1.list(PVR_LIST_TR) {
+//     // Draw all vertices in TR list
+//   }
+//   // tr_list will finalize the list when going out of scope
+// }
+// // Pass 1 will write to the needed registers when going out of scope
+//
+// // The pvr module will handle setting up the TA registers for the second pass
+// if let PowerVRPass::Valid(pass2) = pvr_ctx.create_pass() {
+//   if let PowerVRDisplayListResult::Valid(pt_list) = pass2.list(PVR_LIST_PT) {
+//     // Draw all vertices in PT list
+//   }
+//   // pt_list will finalize the list when going out of scope
+// }
+// // Pass 2 will write to the needed registers when going out of scope
+//
+// pvr_ctx.end_frame();
+
 
 use crate::pvr::types::{PowerVR, PowerVRContext, PowerVRContextResult};
 use crate::pvr::transfer_protocol::{DataTransferProtocol, SQDataTransferProtocol};
 
 extern "C" {
     fn dc_setup_ta();
+}
+
+macro_rules! return_if_context_invalid {
+    ( $ctx:expr ) => {
+        {
+            if !$ctx.valid {
+                return;
+            }
+        }
+    };
+    ( $ctx:expr, $ret:expr ) => {
+        {
+            if !$ctx.valid {
+                return $ret;
+            }
+        }
+    };
 }
 
 /// Determines whether the PowerVR device needs to be initialized on context creation.
@@ -51,23 +101,13 @@ impl PowerVR {
     }
 }
 
-macro_rules! return_if_context_invalid {
-    ( $ctx:expr ) => {
-        {
-            if !$ctx.valid {
-                return;
-            }
-        }
-    };
-    ( $ctx:expr, $ret:expr ) => {
-        {
-            if !$ctx.valid {
-                return $ret;
-            }
-        }
-    };
-}
-
 impl PowerVRContext {
+    fn wait_ready(&self) {
+        return_if_context_invalid!(self);
 
+    }
+
+    fn start_frame(&self) {
+        return_if_context_invalid!(self);
+    }
 }

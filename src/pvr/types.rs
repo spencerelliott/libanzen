@@ -1,3 +1,4 @@
+use crate::util::types::{OkResult, ValidResult};
 use crate::pvr::transfer_protocol::DataTransferProtocol;
 
 // =====================
@@ -5,19 +6,17 @@ use crate::pvr::transfer_protocol::DataTransferProtocol;
 // =====================
 
 pub type PowerVRList = u8;
-pub type PowerVRContextResult = PowerVRResult<PowerVRContext>;
+
+/// Encapsulates the response given when creating a PowerVR context
+pub type PowerVRContextResult = OkResult<PowerVRContext>;
+
+/// Encapsulates the response of starting
+pub type PowerVRPassResult = ValidResult<PowerVRPass>;
 
 // ===============
 // ==== Enums ====
 // ===============
 
-/// Encapsulates the response of a PowerVR call that requires a response.
-pub enum PowerVRResult<T> {
-    /// Returned on a successful message call.
-    Ok(T),
-    /// Returned when an error is encountered during a message call.
-    Error(&'static str)
-}
 
 // =================
 // ==== Structs ====
@@ -31,4 +30,8 @@ pub struct PowerVR { }
 pub struct PowerVRContext {
     pub(crate) valid: bool,
     pub(crate) transfer_protocol: dyn DataTransferProtocol
+}
+
+pub struct PowerVRPass {
+
 }
