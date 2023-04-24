@@ -1,41 +1,9 @@
-//! # PowerVR
-//!
-//! This modules provides an interface to the PowerVR found within the Holly chip inside of the
-//! Dreamcast.
-//!
-//! ## Usage
-//!
-//! ```rust
-//! let mut pvr_ctx;
-//!
-//! if let PowerVRContextResult::Ok(ctx) = PowerVR::create_context() {
-//!     pvr_ctx = ctx;
-//! }
-//!
-//! PowerVR::destroy_context(pvr_ctx);
-//! ```
 
-use crate::util;
+use crate::pvr::types::{PowerVR, PowerVRContext, PowerVRContextResult};
+use crate::pvr::transfer_protocol::{DataTransferProtocol, SQDataTransferProtocol};
 
 extern "C" {
     fn dc_setup_ta();
-}
-
-trait DataTransferProtocol {
-    fn queue(&self);
-    fn send(&self);
-}
-
-struct SQDataTransferProtocol { }
-
-impl DataTransferProtocol for SQDataTransferProtocol {
-    fn queue(&self) {
-
-    }
-
-    fn send(&self) {
-
-    }
 }
 
 /// Determines whether the PowerVR device needs to be initialized on context creation.
@@ -43,26 +11,6 @@ static mut POWERVR_INITIALIZED: bool = false;
 
 /// Determines whether a new [PowerVRContext] can be created when [PowerVR::create_context()] is called.
 static mut POWERVR_CONTEXT_TAKEN: bool = false;
-
-/// Encapsulates the response of a PowerVR call that requires a response.
-pub enum PowerVRResult<T> {
-    /// Returned on a successful message call.
-    Ok(T),
-    /// Returned when an error is encountered during a message call.
-    Error(&'static str)
-}
-
-/// Handles initializing, creating, and destroying the context for the PowerVR.
-struct PowerVR { }
-
-/// Responsible for communicating with the PowerVR chip while also persisting the current context of
-/// the device.
-struct PowerVRContext {
-    valid: bool,
-    transfer_protocol: dyn DataTransferProtocol
-}
-
-type PowerVRContextResult = PowerVRResult<PowerVRContext>;
 
 impl PowerVR {
     /// Creates and returns a new [PowerVRContext] if one does not already exist.
