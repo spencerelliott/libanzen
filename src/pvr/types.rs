@@ -5,18 +5,13 @@ use crate::pvr::transfer_protocol::DataTransferProtocol;
 // ==== Basic Types ====
 // =====================
 
-pub type PowerVRList = u8;
+pub type DrawList = u8;
 
 /// Encapsulates the response given when creating a PowerVR context
-pub type PowerVRContextResult = OkResult<PowerVRContext>;
+pub type ContextResult = OkResult<Context>;
 
 /// Encapsulates the response of starting
-pub type PowerVRPassResult = ValidResult<PowerVRPass>;
-
-// ===============
-// ==== Enums ====
-// ===============
-
+pub type PassResult = ValidResult<RenderPass>;
 
 // =================
 // ==== Structs ====
@@ -27,11 +22,13 @@ pub struct PowerVR { }
 
 /// Responsible for communicating with the PowerVR chip while also persisting the current context of
 /// the device.
-pub struct PowerVRContext {
+pub struct Context {
     pub(crate) valid: bool,
     pub(crate) transfer_protocol: dyn DataTransferProtocol
 }
 
-pub struct PowerVRPass {
+pub struct RenderPass {
 
 }
+
+pub struct DisplayList { }
