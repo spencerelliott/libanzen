@@ -39,14 +39,15 @@
 //! ```
 
 
-use crate::pvr::types::{PowerVR, Context, ContextResult, RenderPass, PassResult};
+use crate::pvr::types::{PowerVR, Context, ContextResult, RenderPass, PassResult, SubmissionList,
+                        DisplayList, DrawList, DisplayListResult, Vertex};
 use crate::pvr::transfer_protocol::{DataTransferProtocol, SQDataTransferProtocol};
 
 extern "C" {
     fn dc_setup_ta();
 }
 
-/// Determines if a PowerVR context is valid and returns if the context is invalid.
+/// Determines if a PowerVR context is valid and returns from a function if the context is invalid.
 macro_rules! return_if_context_invalid {
     ( $ctx:expr ) => {
         {
@@ -63,6 +64,28 @@ macro_rules! return_if_context_invalid {
         }
     };
 }
+
+/// Converts a [DrawList] value into a [SubmissionList] value.
+macro_rules! draw_to_submission {
+    ( $drw:expr ) => {
+        {
+            (1 << $drw);
+        }
+    }
+}
+
+pub const PVR_LIST_OP: DrawList =       0;
+pub const PVR_LIST_OP_MOD: DrawList =   1;
+pub const PVR_LIST_TR: DrawList =       2;
+pub const PVR_LIST_TR_MOD: DrawList =   3;
+pub const PVR_LIST_PT: DrawList =       4;
+
+const SUBMISSION_LIST_NONE: SubmissionList =    0b00000;
+const SUBMISSION_LIST_OP: SubmissionList =      0b00001;
+const SUBMISSION_LIST_OP_MOD: SubmissionList =  0b00010;
+const SUBMISSION_LIST_TR: SubmissionList =      0b00100;
+const SUBMISSION_LIST_TR_MOD: SubmissionList =  0b01000;
+const SUBMISSION_LIST_PT: SubmissionList =      0b10000;
 
 /// Determines whether the PowerVR device needs to be initialized on context creation.
 static mut POWERVR_INITIALIZED: bool = false;
@@ -124,12 +147,43 @@ impl Context {
         return_if_context_invalid!(self, PassResult::Invalid("Context is not valid"));
 
         PassResult::Valid(RenderPass {
-
+            context: self,
+            submitted_lists: SUBMISSION_LIST_NONE,
+            open_lists: SUBMISSION_LIST_NONE
         })
     }
 
     fn submit(&self) {
         return_if_context_invalid!(self);
 
+    }
+}
+
+impl RenderPass {
+    pub fn list(&mut self, draw_list: DrawList) -> DisplayListResult {
+        if self.open_lists & draw_list > 0 || self.submitted_lists & draw_list > 0 {
+            return DisplayListResult::Invalid("List has either been opened or submitted already.");
+        }
+
+        self.open_lists |= draw_to_submission!(draw_list);
+
+        DisplayListResult::Valid(DisplayList {
+            pass: self,
+            list: draw_list
+        })
+    }
+
+    pub(crate) fn close(&mut self, draw_list: DrawList) {
+        self.submitted_lists |= draw_to_submission!(draw_list);
+    }
+}
+
+impl DisplayList {
+    fn draw_vertex(&self, vertex: &Vertex) {
+        self.pass.context.transfer_protocol.queue();
+    }
+
+    fn submit(&mut self) {
+        self.pass.close(self.list);
     }
 }
