@@ -22,58 +22,37 @@ sudo apt install gawk patch bzip2 tar make libgmp-dev libmpfr-dev libmpc-dev get
 
 #### Downloading the source
 
-Create the folder `/opt/toolchains/dc-gcc13` to hold all the source code and resulting binaries. Navigate to the new 
+Create the folder `/opt/toolchains/dc-gccrs` to hold all the source code and resulting binaries. Navigate to the new 
 folder and checkout the latest version of the KallistiOS repository:
 
 ```shell
-git clone -b gcc13 https://github.com/KallistiOS/KallistiOS.git kos
+git clone -b gccrs https://github.com/KallistiOS/KallistiOS.git kos
 ```
 
 #### Creating the configuration file
 
-Navigate to `/opt/toolchains/dc-gcc13/kos/utils/dc-chain` and run the following command:
+Navigate to `/opt/toolchains/dc-gccrs/kos/utils/dc-chain` and run the following command:
 
 ```shell
-mv config.mk.bleeding.sample config.mk
+cp config/config.mk.gccrs.sample config.mk
 ```
 
-This will copy the default configuration for compiling GCC13. Next, change the following variables in `config.mk`:
+This will copy the default configuration for compiling GCCRS. Next, change the following variables in `config.mk`:
 
 ```shell
-toolchains_base=/opt/toolchains/dc-gcc13
-pass2_languages=c,c++,objc,obj-c++,rust
+toolchains_base=/opt/toolchains/dc-gccrs
 thread_model=single
 auto_fixup_sh4_newlib=0
 ```
-
-#### Preparing the required libraries and source code
-
-The dc-chain Makefile requires the source for the libraries to be downloaded to specific folders. Multiple scripts are provided
-in the repository to assist with setup. Run the following commands to prepare the workspace:
-
-```shell
-./download.sh
-./unpack.sh
-```
-
-Once the sources have been downloaded and unpacked, the GCC12 sources can be safely deleted, if desired. Finally, the latest
-GCC13 sources will need to be checked out:
-
-```shell
-git clone https://github.com/gcc-mirror/gcc.git gcc-13
-```
+**Note:** If you would only like to use KallistiOS with Rust support, do not modify `thread_model` or `auto_fixup_sh4_newlib` in your configuration file.
 
 #### Compiling the toolchain
 
-Edit `config.mk` one last time and change the `sh_gcc_ver` to `13`:
-
-```shell
-sh_gcc_ver=13
-```
-
-Now, run `make build` inside of the folder and a newly compiled toolchain should exist in
-`/opt/toolchains/dc-gcc13/`. Add `/opt/toolchains/dc-gcc13/sh-elf/bin` and `/opt/toolchains/dc-gcc13/arm-eabi/bin` to 
+Run `make` inside of the folder and a newly compiled toolchain should exist in
+`/opt/toolchains/dc-gccrs/`. Add `/opt/toolchains/dc-gccrs/sh-elf/bin` and `/opt/toolchains/dc-gccrs/arm-eabi/bin` to 
 your `PATH` variable and everything should be set up!
+
+If GCCRS was compiled for use with KallistiOS and not libanzen, [follow these steps to compile KOS](https://dreamcast.wiki/Getting_Started_with_Dreamcast_development#Configuring_and_compiling_KOS_and_kos-ports)
 
 ## Installing cargo-gccrs
 
